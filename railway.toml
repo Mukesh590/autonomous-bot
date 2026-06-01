@@ -1,0 +1,19 @@
+# railway.toml — Railway deployment configuration
+#
+# WHY WORKER (not web):
+#   This bot has no HTTP server — it's a continuous background process.
+#   Railway's "worker" service type skips health checks and port binding,
+#   which is exactly what we want for a trading bot.
+#
+# WHY DOCKERFILE (not nixpacks):
+#   Explicit control over the Python version and image.
+#   Nixpacks can auto-detect, but Dockerfile gives us reproducibility.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "python bot.py"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

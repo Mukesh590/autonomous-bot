@@ -1,0 +1,21 @@
+# Core Alpaca SDK (newer, maintained; replaces alpaca-trade-api)
+alpaca-py>=0.26.0
+
+# Data manipulation — required for bar processing and indicator input
+pandas>=2.0.0
+
+# Technical analysis library — pure Python, no C extensions needed (unlike ta-lib)
+# Provides EMA, RSI, ATR via a clean pandas-based API
+ta>=0.10.2
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Structured logging with rotation, compression, async writes
+loguru>=0.7.2
+
+# Timezone handling — pytz for ET/UTC conversion
+pytz>=2024.1
+
+# In-process scheduler — simpler than cron, works identically on all platforms
+schedule>=1.2.1
