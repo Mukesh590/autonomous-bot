@@ -463,6 +463,9 @@ def end_of_day_close():
       (earnings, macro news, geopolitical events) that our intraday EMA
       strategy is not designed to handle. Closing flat every day limits
       maximum daily loss to our worst-case of 5 positions × 2 ATR each.
+
+    Returns schedule.CancelJob once past close time so the job unschedules
+    itself and doesn't keep firing all evening.
     """
     now = datetime.now(ET)
     if now.weekday() >= 5:
@@ -472,11 +475,21 @@ def end_of_day_close():
     if not (now.time() >= close_time):
         return
 
-    trade_logger.log_info("END-OF-DAY: closing all positions")
     try:
         positions = trading_client.get_all_positions()
+        if not positions:
+            trade_logger.log_info("END-OF-DAY: no open positions — nothing to close")
+            return schedule.CancelJob
+
+        trade_logger.log_info("END-OF-DAY: closing all positions")
         for pos in positions:
             try:
+                # Skip positions held in pending orders (qty_available=0 causes 403)
+                if float(pos.qty_available) <= 0:
+                    trade_logger.log_info(
+                        f"EOD skip {pos.symbol}: qty_available=0 (held_for_orders)"
+                    )
+                    continue
                 # Cancel open orders first
                 open_orders = trading_client.get_orders(
                     GetOrdersRequest(symbols=[pos.symbol], status=QueryOrderStatus.OPEN)
@@ -490,6 +503,8 @@ def end_of_day_close():
                 trade_logger.log_error(f"EOD close {pos.symbol}", e)
     except Exception as e:
         trade_logger.log_error("end_of_day_close", e)
+
+    return schedule.CancelJob  # Unschedule after running — don't fire all night
 
 
 # ── Startup ────────────────────────────────────────────────────────────────────
